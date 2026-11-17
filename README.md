@@ -1,4 +1,4 @@
-# Search Inline Blendshapes
+# Inline Blendshapes Search
 
 Wow. you can search for blendshapes while changing them on the mesh now. huge revelation
 

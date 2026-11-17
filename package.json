@@ -1,18 +1,15 @@
 {
-  "name": "cat.nyako.search-inline-blendshapes",
-  "version": "0.1.0",
-  "displayName": "Search Inline Blendshapes",
+  "name": "cat.nyako.blendshape-searcher-inline",
+  "version": "1.0.0",
+  "displayName": "nkcat // Inline Blendshape Searcher",
   "description": "Search and filter blendshapes directly inside the Skinned Mesh Renderer inspector.",
   "unity": "2022.3",
   "author": {
-    "name": "Nyako",
-    "url": "https://github.com/nyakowint"
+    "name": "nyako"
   },
   "license": "MIT",
-  "licensesUrl": "https://github.com/nyakowint/search-inline-blendshapes/blob/main/LICENSE.md",
-  "documentationUrl": "https://github.com/nyakowint/search-inline-blendshapes",
-  "changelogUrl": "https://github.com/nyakowint/search-inline-blendshapes/releases",
-  "url": "https://github.com/nyakowint/search-inline-blendshapes/releases/download/v0.1.0/cat.nyako.search-inline-blendshapes-0.1.0.zip",
+  "documentationUrl": "https://github.com/nyakowint/blendshape-searcher-inline",
+  "changelogUrl": "https://github.com/nyakowint/blendshape-searcher-inline/releases",
   "keywords": ["blendshape", "skinned mesh renderer", "inspector", "editor"],
   "vpmDependencies": {
     "com.vrchat.base": ">=3.7.0 <4.0.0"
