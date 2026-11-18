@@ -1,6 +1,6 @@
 {
   "name": "cat.nyako.blendshape-searcher-inline",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "nkcat // Inline Blendshape Searcher",
   "description": "Search and filter blendshapes directly inside the Skinned Mesh Renderer inspector.",
   "unity": "2022.3",

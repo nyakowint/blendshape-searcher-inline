@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -20,8 +21,18 @@ namespace Nyako.SearchInlineBlendshapes
         private delegate void PropertySlider(SerializedProperty property, float sliderMin, float sliderMax, float textMin, float textMax, GUIContent label, GUILayoutOption[] options);
         private delegate float ValueSlider(GUIContent label, float value, float sliderMin, float sliderMax, float textMin, float textMax, GUILayoutOption[] options);
 
+        private sealed class State
+        {
+            public readonly List<int> Matches = new List<int>();
+            // Shapes shown since the search or filter last changed, so editing one past the filter keeps it in place
+            public readonly HashSet<int> Shown = new HashSet<int>();
+            public Mesh Mesh;
+            public string Search;
+            public Filter Filter;
+        }
+
         private static readonly GUIContent Label = new GUIContent();
-        private static readonly List<int> Matches = new List<int>();
+        private static readonly ConditionalWeakTable<Editor, State> States = new ConditionalWeakTable<Editor, State>();
         private static PropertySlider propertySlider;
         private static ValueSlider valueSlider;
         private static SearchField searchField;
@@ -72,13 +83,23 @@ namespace Nyako.SearchInlineBlendshapes
                 EditorGUILayout.HelpBox("Note that BlendShape weight range is clamped. This can be disabled in Player Settings.", MessageType.Info);
 
             var arraySize = weights.arraySize;
-            CollectMatches(mesh, weights, arraySize);
-            DrawToolbar(count);
+            var state = States.GetOrCreateValue(__instance);
+            if (state.Mesh != mesh || state.Search != search || state.Filter != filter)
+            {
+                state.Shown.Clear();
+                state.Mesh = mesh;
+                state.Search = search;
+                state.Filter = filter;
+            }
 
-            if (Matches.Count == 0)
+            CollectMatches(state, mesh, weights, arraySize);
+            var matches = state.Matches;
+            DrawToolbar(matches.Count, count);
+
+            if (matches.Count == 0)
                 EditorGUILayout.LabelField("No matching blendshapes", EditorStyles.centeredGreyMiniLabel);
 
-            foreach (var i in Matches)
+            foreach (var i in matches)
             {
                 Label.text = mesh.GetBlendShapeName(i);
                 float min = 0f, max = 0f;
@@ -110,25 +131,26 @@ namespace Nyako.SearchInlineBlendshapes
             return false;
         }
 
-        private static void CollectMatches(Mesh mesh, SerializedProperty weights, int arraySize)
+        private static void CollectMatches(State state, Mesh mesh, SerializedProperty weights, int arraySize)
         {
-            Matches.Clear();
+            state.Matches.Clear();
             var terms = search.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
             for (var i = 0; i < mesh.blendShapeCount; i++)
             {
-                if (filter != Filter.All)
+                if (filter != Filter.All && !state.Shown.Contains(i))
                 {
                     var nonZero = i < arraySize && weights.GetArrayElementAtIndex(i).floatValue != 0f;
                     if (nonZero != (filter == Filter.NonZero)) continue;
                 }
 
                 var name = mesh.GetBlendShapeName(i);
-                if (Array.TrueForAll(terms, t => name.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0))
-                    Matches.Add(i);
+                if (!Array.TrueForAll(terms, t => name.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0)) continue;
+                state.Matches.Add(i);
+                state.Shown.Add(i);
             }
         }
 
-        private static void DrawToolbar(int count)
+        private static void DrawToolbar(int matchCount, int count)
         {
             var row = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
             var indent = EditorGUI.indentLevel;
@@ -149,7 +171,7 @@ namespace Nyako.SearchInlineBlendshapes
                 SessionState.SetInt(FilterKey, (int)filter);
             }
 
-            EditorGUI.LabelField(countRect, Matches.Count + " / " + count, EditorStyles.miniLabel);
+            EditorGUI.LabelField(countRect, matchCount + " / " + count, EditorStyles.miniLabel);
             EditorGUI.indentLevel = indent;
         }
     }
